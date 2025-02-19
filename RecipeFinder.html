@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #ff6f61;
+        }
+
+        .hover-prompt {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 1.5rem;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #ff6f61;
+            box-shadow: 0 0 8px rgba(255, 111, 97, 0.3);
+        }
+
+        button {
+            background: #ff6f61;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #ff4a3d;
+            transform: translateY(-2px);
+        }
+
+        /* Grid Layout for Recipe Cards */
+        #recipeList {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .recipe-card img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .recipe-card h3 {
+            font-size: 1.25rem;
+            margin: 0.5rem 0;
+            color: #333;
+        }
+
+        .recipe-card a {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 8px 16px;
+            background: #ff6f61;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .recipe-card a:hover {
+            background: #ff4a3d;
+        }
+
+        /* Hover Overlay for Macros */
+        .recipe-card .macros {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .recipe-card:hover .macros {
+            opacity: 1;
+        }
+
+        .macros p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        /* Horizontal Scroll for Mobile */
+        @media (max-width: 600px) {
+            #recipeList {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                padding-bottom: 1rem;
+            }
+
+            .recipe-card {
+                scroll-snap-align: start;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <h2>🍴 Recipe Finder</h2>
+        <p class="hover-prompt">Hover over a recipe to see its nutrition information!</p>
+        <input type="text" id="ingredientInput" placeholder="Enter ingredients (e.g., chicken tomatoes onions)">
+        <select id="cuisineFilter">
+            <option value="">Select Cuisine (Optional)</option>
+            <option value="italian">Italian</option>
+            <option value="mexican">Mexican</option>
+            <option value="indian">Indian</option>
+            <option value="chinese">Chinese</option>
+        </select>
+        <button onclick="fetchRecipes()">Search Recipes</button>
+        <div id="recipeList"></div>
+    </div>
+
+    <script>
+        const apiKey = '81b2029760f94278b8758e0d3aae6d0c';  // Replace with your actual API key
+
+        async function fetchRecipes() {
+            const ingredientInput = document.getElementById('ingredientInput').value.trim();
+            const cuisine = document.getElementById('cuisineFilter').value;
+
+            if (!ingredientInput) {
+                alert('Please enter at least one ingredient');
+                return;
+            }
+
+            // Format ingredients for the API (no commas needed)
+            const formattedIngredients = ingredientInput.split(' ').join(',');
+
+            let apiUrl = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${apiKey}&query=${formattedIngredients}&number=10&addRecipeInformation=true`;
+
+            if (cuisine) {
+                apiUrl += `&cuisine=${cuisine}`;
+            }
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (!data.results || data.results.length === 0) {
+                    document.getElementById('recipeList').innerHTML = '<p>No recipes found. Try different ingredients or cuisines.</p>';
+                    return;
+                }
+
+                displayRecipes(data.results);
+            } catch (error) {
+                console.error('Error fetching recipes:', error);
+                document.getElementById('recipeList').innerHTML = '<p>Failed to fetch recipes. Please try again later.</p>';
+            }
+        }
+
+        async function fetchRecipeNutrition(recipeId) {
+            const apiUrl = `https://api.spoonacular.com/recipes/${recipeId}/nutritionWidget.json?apiKey=${apiKey}`;
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching nutrition:', error);
+                return null;
+            }
+        }
+
+        async function displayRecipes(recipes) {
+            const recipeList = document.getElementById('recipeList');
+            recipeList.innerHTML = '';
+
+            for (const recipe of recipes) {
+                const card = document.createElement('div');
+                card.className = 'recipe-card';
+
+                const image = document.createElement('img');
+                image.src = recipe.image;
+                image.alt = recipe.title;
+                card.appendChild(image);
+
+                const title = document.createElement('h3');
+                title.textContent = recipe.title;
+                card.appendChild(title);
+
+                // Fetch and display nutrition information
+                const nutrition = await fetchRecipeNutrition(recipe.id);
+                if (nutrition) {
+                    const macros = document.createElement('div');
+                    macros.className = 'macros';
+                    macros.innerHTML = `
+                        <p>Calories: ${nutrition.calories}</p>
+                        <p>Protein: ${nutrition.protein}</p>
+                        <p>Fat: ${nutrition.fat}</p>
+                        <p>Carbs: ${nutrition.carbs}</p>
+                    `;
+                    card.appendChild(macros);
+                }
+
+                const link = document.createElement('a');
+                link.href = recipe.sourceUrl;
+                link.target = '_blank';
+                link.textContent = 'View Recipe';
+                card.appendChild(link);
+
+                recipeList.appendChild(card);
+            }
+        }
+    </script>
+
+</body>
+</html>
