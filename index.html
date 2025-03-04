@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         /* General Styles */
         body {
@@ -85,6 +86,7 @@
             transition: transform 0.3s ease;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .recipe-card:hover {
@@ -93,6 +95,8 @@
 
         .recipe-card img {
             width: 100%;
+            height: 200px;
+            object-fit: cover;
             border-radius: 10px;
             margin-bottom: 1rem;
         }
@@ -101,22 +105,11 @@
             font-size: 1.25rem;
             margin: 0.5rem 0;
             color: #333;
-        }
-
-        .recipe-card a {
-            display: inline-block;
-            margin-top: 0.5rem;
-            padding: 8px 16px;
-            background: #ff6f61;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: background 0.3s ease;
-        }
-
-        .recipe-card a:hover {
-            background: #ff4a3d;
+            min-height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
         }
 
         /* Hover Overlay for Macros */
@@ -161,10 +154,8 @@
             }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div class="container">
         <h2>🍴 Recipe Finder</h2>
         <p class="hover-prompt">Hover over a recipe to see its nutrition information!</p>
@@ -181,7 +172,8 @@
     </div>
 
     <script>
-        const apiKey = '81b2029760f94278b8758e0d3aae6d0c';  // Replace with your actual API key
+        // IMPORTANT: Replace with your actual Spoonacular API key
+        const apiKey = '81b2029760f94278b8758e0d3aae6d0c';
 
         async function fetchRecipes() {
             const ingredientInput = document.getElementById('ingredientInput').value.trim();
@@ -237,6 +229,18 @@
                 const card = document.createElement('div');
                 card.className = 'recipe-card';
 
+                // Determine recipe URL
+                const recipeUrl = 
+                    recipe.sourceUrl || 
+                    recipe.spoonacularSourceUrl || 
+                    recipe.url || 
+                    `https://spoonacular.com/recipes/${encodeURIComponent(recipe.title.replace(/\s+/g, '-').toLowerCase())}-${recipe.id}`;
+
+                // Add click event to open recipe
+                card.addEventListener('click', () => {
+                    window.open(recipeUrl, '_blank');
+                });
+
                 const image = document.createElement('img');
                 image.src = recipe.image;
                 image.alt = recipe.title;
@@ -260,16 +264,9 @@
                     card.appendChild(macros);
                 }
 
-                const link = document.createElement('a');
-                link.href = recipe.sourceUrl;
-                link.target = '_blank';
-                link.textContent = 'View Recipe';
-                card.appendChild(link);
-
                 recipeList.appendChild(card);
             }
         }
     </script>
-
 </body>
 </html>
